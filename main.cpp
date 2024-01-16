@@ -5,6 +5,16 @@
 #include <stddef.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include "ieee80211_radiotap.h"
+#include "beacon_frame.h"
+#include "mac.h"
+
+#pragma pack(push, 1)
+struct RdtBcnPacket final {
+    struct _ieee80211_radiotap_header rdt_;
+    struct beacon_frame_header bc_;
+};
+#pragma pack(pop)
 
 void usage()
 {
@@ -29,6 +39,9 @@ bool parse(Param* param, int argc, char* argv[]) {
 	return true;
 }
 
+void print_mac(const u_int8_t *m) {
+    printf("%02x:%02x:%02x:%02x:%02x:%02x", m[0], m[1], m[2], m[3], m[4], m[5]);
+}
 
 int main(int argc, char** argv)
 {
@@ -41,7 +54,7 @@ int main(int argc, char** argv)
 		fprintf(stderr, "pcap_open_live(%s) return null - %s\n", param.dev_, errbuf);
 		return -1;
 	}
-
+    int cnt = 1;
 	while (true) {
 		struct pcap_pkthdr* header;
 		const u_char* packet;
@@ -50,10 +63,18 @@ int main(int argc, char** argv)
 		if (res == PCAP_ERROR || res == PCAP_ERROR_BREAK) {
 			printf("pcap_next_ex return %d(%s)\n", res, pcap_geterr(pcap));
 			break;
-		}
-		printf("%u bytes captured\n", header->caplen);
+		}  
+
+        //raw hex
+        printf("\n\n\n==========%d packet==========\n", cnt++);
+        int i = 0;
+        for (i = 0; i < header->len; i++) {
+            printf("%02x ", packet[i]);
+        }
+        printf("total length: %d\n", i);
+        printf("\n");
 	}
 
 	pcap_close(pcap);
-
+    return 0;
 }
