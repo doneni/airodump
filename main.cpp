@@ -41,6 +41,7 @@ void print_info()
 	printf("========================================================\n");
 	for(const auto& entry : um)
 		printf("%s\t%d\t%s\n", entry.first.c_str(), entry.second.beacons,entry.second.essid.c_str());
+	std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	return;
 }
 
@@ -48,6 +49,8 @@ int main(int argc, char** argv)
 {
     if (!parse(&param, argc, argv))
 		return -1;
+	
+	std::thread thrd(print_info);
 
 	char errbuf[PCAP_ERRBUF_SIZE];
 	pcap_t* pcap = pcap_open_live(param.dev_, BUFSIZ, 1, 1000, errbuf);
@@ -89,6 +92,7 @@ int main(int argc, char** argv)
 		print_info();
 	}
 
+	thrd.join();
 	pcap_close(pcap);
     return 0;
 }
