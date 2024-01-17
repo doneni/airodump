@@ -5,8 +5,11 @@
 #include <stddef.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <iostream>
+#include <unordered_map>
 #include "radiotap.h"
 #include "beacon_frame.h"
+#include "wireless.h"
 
 void usage()
 {
@@ -59,6 +62,7 @@ int main(int argc, char** argv)
 
 		struct _ieee80211_radiotap_header* rdt_hdr = (struct _ieee80211_radiotap_header*)packet;
 		struct _ieee80211_beacon_frame_header* bc_hdr = (struct _ieee80211_beacon_frame_header*)(rdt_hdr->it_len + packet);
+		struct _ieee80211_wireless_management_header* wire_hdr = (struct _ieee80211_wireless_management_header*)(rdt_hdr->it_len + sizeof(_ieee80211_beacon_frame_header) + packet);
 
 		if(bc_hdr->frame_control != 0x80)
 			continue;
@@ -66,6 +70,10 @@ int main(int argc, char** argv)
 		printf("beacon type: %02x\n", bc_hdr->frame_control);
         printf("bssid: ");
 		print_mac(bc_hdr->bssid);
+		printf("\n");
+		printf("essid: ");
+		for(int j = 0; j < wire_hdr->tag_length; j++)
+			printf("%c", wire_hdr->ssid[j]);
 		printf("\n");
 	}
 
