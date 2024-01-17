@@ -5,16 +5,8 @@
 #include <stddef.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "ieee80211_radiotap.h"
+#include "radiotap.h"
 #include "beacon_frame.h"
-#include "mac.h"
-
-#pragma pack(push, 1)
-struct RdtBcnPacket final {
-    struct _ieee80211_radiotap_header rdt_;
-    struct beacon_frame_header bc_;
-};
-#pragma pack(pop)
 
 void usage()
 {
@@ -65,14 +57,16 @@ int main(int argc, char** argv)
 			break;
 		}  
 
-        //raw hex
-        printf("\n\n\n==========%d packet==========\n", cnt++);
-        int i = 0;
-        for (i = 0; i < header->len; i++) {
-            printf("%02x ", packet[i]);
-        }
-        printf("total length: %d\n", i);
-        printf("\n");
+		struct _ieee80211_radiotap_header* rdt_hdr = (struct _ieee80211_radiotap_header*)packet;
+		struct _ieee80211_beacon_frame_header* bc_hdr = (struct _ieee80211_beacon_frame_header*)(rdt_hdr->it_len + packet);
+
+		if(bc_hdr->frame_control != 0x80)
+			continue;
+		printf("\n\n\n==========%d packet==========\n", cnt++);
+		printf("beacon type: %02x\n", bc_hdr->frame_control);
+        printf("bssid: ");
+		print_mac(bc_hdr->bssid);
+		printf("\n");
 	}
 
 	pcap_close(pcap);

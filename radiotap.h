@@ -157,6 +157,14 @@ typedef struct _ieee80211_radiotap_header {
 								* Additional extensions are made
 								* by setting bit 31.
 								*/
+	uint8_t flags;
+	uint8_t data_rate;
+	uint16_t channel_frequency;
+	uint16_t channel_flags;
+	uint8_t antenna_signal1;
+	uint16_t rx_flags;
+	uint8_t antenna_signal2;
+	uint8_t antenna;
 } IEEE80211_RADIOTAP_HEADER, *PIEEE80211_RADIOTAP_HEADER;
 #ifdef __MINGW32__
 __attribute__((__packed__))
