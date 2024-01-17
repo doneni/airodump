@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <iostream>
+#include <string>
 #include <unordered_map>
 #include "radiotap.h"
 #include "beacon_frame.h"
@@ -50,6 +51,7 @@ int main(int argc, char** argv)
 		return -1;
 	}
     int cnt = 1;
+	std::unordered_map<std::string, int> um;
 	while (true) {
 		struct pcap_pkthdr* header;
 		const u_char* packet;
@@ -72,9 +74,15 @@ int main(int argc, char** argv)
 		print_mac(bc_hdr->bssid);
 		printf("\n");
 		printf("essid: ");
-		for(int j = 0; j < wire_hdr->tag_length; j++)
-			printf("%c", wire_hdr->ssid[j]);
+		std::string ssid_str(reinterpret_cast<char*>(wire_hdr->ssid), wire_hdr->tag_length);
+		printf("%s\n", ssid_str.c_str());
+		if(um.find(ssid_str) != um.end())
+			um[ssid_str]++;
+		else
+			um[ssid_str] = 1;
+		printf("beacons: %d\n", um[ssid_str]);
 		printf("\n");
+		
 	}
 
 	pcap_close(pcap);
