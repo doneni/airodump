@@ -2,7 +2,7 @@ LDLIBS=-lpcap
 
 all: airodump
 
-main.o: wireless.h beacon_frame.h radiotap.h main.cpp
+main.o: wireless.h beacon_frame.h radiotap.h main.h main.cpp
 
 radiotap.o: radiotap.h radiotap.cpp
 
