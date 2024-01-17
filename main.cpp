@@ -7,7 +7,9 @@
 #include <arpa/inet.h>
 #include <iostream>
 #include <string>
+#include <map>
 #include <unordered_map>
+#include <unistd.h>
 #include "radiotap.h"
 #include "beacon_frame.h"
 #include "wireless.h"
@@ -23,7 +25,7 @@ struct airodump_info{
 	std::string essid;
 };
 
-std::unordered_map<u_int8_t*, struct airodump_info> um;
+std::unordered_map<std::string, struct airodump_info> um;
 
 typedef struct {
 	char* dev_;
@@ -51,14 +53,8 @@ void print_info()
 	system("clear");
 	printf("BSSID\t\t\t%-10s%-40s\n", "Beacons", "ESSID");
 	printf("========================================================\n");
-    // for (const auto& entry : um) {
-	// 	print_mac(entry.first);
-    //     printf("\t%-10d%-20s\n", entry.second.beacons, entry.second.essid.c_str());
-    // }
 	for(const auto& entry : um)
-	{
-		printf("%s\t%d\t%s\n", entry.first, entry.second.beacons,entry.second.essid.c_str());
-	}
+		printf("%s\t%d\t%s\n", entry.first.c_str(), entry.second.beacons,entry.second.essid.c_str());
 	return;
 }
 
@@ -91,27 +87,22 @@ int main(int argc, char** argv)
 		if(bc_hdr->frame_control != 0x80)
 			continue;
 		printf("\n\n\n==========%d packet==========\n", cnt++);
-        printf("bssid: ");
-		print_mac(bc_hdr->bssid);
-		printf("\n");
-		std::string ssid_str(reinterpret_cast<char*>(wire_hdr->ssid), wire_hdr->tag_length);
-		if(um.find(bc_hdr->bssid) != um.end())
-			um[bc_hdr->bssid].beacons++;
+		char bssid_str[18];
+		std::sprintf(bssid_str, "%02x:%02x:%02x:%02x:%02x:%02x",
+                       bc_hdr->bssid[0], bc_hdr->bssid[1], bc_hdr->bssid[2], bc_hdr->bssid[3], bc_hdr->bssid[4], bc_hdr->bssid[5]);
+		std::string essid_str(reinterpret_cast<char*>(wire_hdr->ssid), wire_hdr->tag_length);
+		printf("%s\n", bssid_str);
+		if(um.find(bssid_str) != um.end())
+			um[bssid_str].beacons++;
 		else
 		{
-			printf("not found %s is added...\n", ssid_str.c_str());
 			struct airodump_info info;
 			info.beacons = 1;
-			info.essid = ssid_str;
-			um.insert({bc_hdr->bssid, info});
+			info.essid = essid_str;
+			um[bssid_str] = info;
 		}
-		
-   		for (const auto& entry : um) {
-			print_mac(entry.first);
-			printf("%-20d%-20s\n", entry.second.beacons, entry.second.essid.c_str());
-    	}
-		
-		// print_info();		
+
+		print_info();
 	}
 
 	pcap_close(pcap);
