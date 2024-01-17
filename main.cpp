@@ -18,6 +18,13 @@ void usage()
     printf("sample : airodump mon0\n");
 }
 
+struct airodump_info{
+	int beacons;
+	std::string essid;
+};
+
+std::unordered_map<u_int8_t*, struct airodump_info> um;
+
 typedef struct {
 	char* dev_;
 } Param;
@@ -39,6 +46,22 @@ void print_mac(const u_int8_t *m) {
     printf("%02x:%02x:%02x:%02x:%02x:%02x", m[0], m[1], m[2], m[3], m[4], m[5]);
 }
 
+void print_info()
+{
+	system("clear");
+	printf("BSSID\t\t\t%-10s%-40s\n", "Beacons", "ESSID");
+	printf("========================================================\n");
+    // for (const auto& entry : um) {
+	// 	print_mac(entry.first);
+    //     printf("\t%-10d%-20s\n", entry.second.beacons, entry.second.essid.c_str());
+    // }
+	for(const auto& entry : um)
+	{
+		printf("%s\t%d\t%s\n", entry.first, entry.second.beacons,entry.second.essid.c_str());
+	}
+	return;
+}
+
 int main(int argc, char** argv)
 {
     if (!parse(&param, argc, argv))
@@ -51,7 +74,6 @@ int main(int argc, char** argv)
 		return -1;
 	}
     int cnt = 1;
-	std::unordered_map<std::string, int> um;
 	while (true) {
 		struct pcap_pkthdr* header;
 		const u_char* packet;
@@ -69,20 +91,27 @@ int main(int argc, char** argv)
 		if(bc_hdr->frame_control != 0x80)
 			continue;
 		printf("\n\n\n==========%d packet==========\n", cnt++);
-		printf("beacon type: %02x\n", bc_hdr->frame_control);
         printf("bssid: ");
 		print_mac(bc_hdr->bssid);
 		printf("\n");
-		printf("essid: ");
 		std::string ssid_str(reinterpret_cast<char*>(wire_hdr->ssid), wire_hdr->tag_length);
-		printf("%s\n", ssid_str.c_str());
-		if(um.find(ssid_str) != um.end())
-			um[ssid_str]++;
+		if(um.find(bc_hdr->bssid) != um.end())
+			um[bc_hdr->bssid].beacons++;
 		else
-			um[ssid_str] = 1;
-		printf("beacons: %d\n", um[ssid_str]);
-		printf("\n");
+		{
+			printf("not found %s is added...\n", ssid_str.c_str());
+			struct airodump_info info;
+			info.beacons = 1;
+			info.essid = ssid_str;
+			um.insert({bc_hdr->bssid, info});
+		}
 		
+   		for (const auto& entry : um) {
+			print_mac(entry.first);
+			printf("%-20d%-20s\n", entry.second.beacons, entry.second.essid.c_str());
+    	}
+		
+		// print_info();		
 	}
 
 	pcap_close(pcap);
