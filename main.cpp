@@ -75,6 +75,7 @@ int main(int argc, char** argv)
 
 		if(bc_hdr->frame_control != 0x80)
 			continue;
+
 		char bssid_str[18];
 		std::sprintf(bssid_str, "%02x:%02x:%02x:%02x:%02x:%02x",
                        bc_hdr->bssid[0], bc_hdr->bssid[1], bc_hdr->bssid[2], bc_hdr->bssid[3], bc_hdr->bssid[4], bc_hdr->bssid[5]);
