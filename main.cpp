@@ -69,17 +69,17 @@ int main(int argc, char** argv)
 			break;
 		}  
 
-		struct _ieee80211_radiotap_header* rdt_hdr = (struct _ieee80211_radiotap_header*)packet;
-		struct _ieee80211_beacon_frame_header* bc_hdr = (struct _ieee80211_beacon_frame_header*)(rdt_hdr->it_len + packet);
-		struct _ieee80211_wireless_management_header* wire_hdr = (struct _ieee80211_wireless_management_header*)(rdt_hdr->it_len + sizeof(_ieee80211_beacon_frame_header) + packet);
+		struct _ieee80211_radiotap_header* radiotap_hdr = (struct _ieee80211_radiotap_header*)packet;
+		struct _ieee80211_beacon_frame_header* beacon_hdr = (struct _ieee80211_beacon_frame_header*)(radiotap_hdr->it_len + packet);
+		struct _ieee80211_wireless_management_header* wireless_hdr = (struct _ieee80211_wireless_management_header*)(radiotap_hdr->it_len + sizeof(_ieee80211_beacon_frame_header) + packet);
 
-		if(bc_hdr->frame_control != 0x80)
+		if(beacon_hdr->frame_control != 0x80 || wireless_hdr->tag_number != 0)
 			continue;
 
 		char bssid_str[18];
 		std::sprintf(bssid_str, "%02x:%02x:%02x:%02x:%02x:%02x",
-                       bc_hdr->bssid[0], bc_hdr->bssid[1], bc_hdr->bssid[2], bc_hdr->bssid[3], bc_hdr->bssid[4], bc_hdr->bssid[5]);
-		std::string essid_str(reinterpret_cast<char*>(wire_hdr->ssid), wire_hdr->tag_length);
+                       beacon_hdr->bssid[0], beacon_hdr->bssid[1], beacon_hdr->bssid[2], beacon_hdr->bssid[3], beacon_hdr->bssid[4], beacon_hdr->bssid[5]);
+		std::string essid_str(reinterpret_cast<char*>(wireless_hdr->ssid), wireless_hdr->tag_length);
 		if(um.find(bssid_str) != um.end())
 			um[bssid_str].beacons++;
 		else
