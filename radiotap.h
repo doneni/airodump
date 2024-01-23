@@ -161,7 +161,7 @@ typedef struct _ieee80211_radiotap_header {
 	uint8_t data_rate;
 	uint16_t channel_frequency;
 	uint16_t channel_flags;
-	uint8_t antenna_signal1;
+	uint16_t antenna_signal1;
 	uint16_t rx_flags;
 	uint8_t antenna_signal2;
 	uint8_t antenna;
